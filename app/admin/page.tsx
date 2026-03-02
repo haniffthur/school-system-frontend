@@ -54,19 +54,28 @@ export default function AdminDashboard() {
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
+const fetchDashboardData = async () => {
     try {
-      // 1. Ambil Data Siswa (Total)
-      const resStudents = await axios.get("http://localhost:3000/students");
+      // 1. Ambil token dari brankas (localStorage)
+      const token = localStorage.getItem("token");
+      if (!token) return; // Kalau gak ada token, batalin request
+
+      // 2. Siapkan config header tokennya
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
+
+      // 3. Ambil Data Siswa (Total) - SEKARANG PAKE CONFIG
+      const resStudents = await axios.get("http://localhost:3000/students", config);
       const total = resStudents.data.length;
 
-      // 2. Ambil History Absen (Buat Aktivitas & Statistik)
-      const resLogs = await axios.get("http://localhost:3000/attendance/history");
+      // 4. Ambil History Absen - PAKE CONFIG JUGA
+      const resLogs = await axios.get("http://localhost:3000/attendance/history", config);
       const logs = resLogs.data;
 
       // Filter log hari ini
       const today = new Date().toISOString().split('T')[0];
-      const todayLogs = logs.filter((l: any) => l.date.startsWith(today));
+      const todayLogs = logs.filter((l: any) => l.date && l.date.startsWith(today));
 
       // Hitung Statistik Sederhana
       const presentCount = todayLogs.filter((l: any) => l.status === 'PRESENT').length;
@@ -79,11 +88,14 @@ export default function AdminDashboard() {
           absent: total - (presentCount + lateCount) // Sisanya dianggap belum hadir/alpha
       });
 
-      // 3. Set Aktivitas Terbaru (Ambil 5 teratas)
+      // 5. Set Aktivitas Terbaru (Ambil 5 teratas)
       setActivities(logs.slice(0, 5));
 
       setLoading(false);
-    } catch (error) { console.error(error); setLoading(false); }
+    } catch (error) { 
+      console.error("Gagal load data dashboard:", error); 
+      setLoading(false); 
+    }
   };
 
   // Komponen Kartu Statistik

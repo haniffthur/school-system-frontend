@@ -15,10 +15,21 @@ export default function MajorsPage() {
 
   const fetchMajors = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/majors");
+      // 1. Ambil token dari localStorage
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      // 2. Sisipkan token ke request Backend
+      const res = await axios.get("http://localhost:3000/majors", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
       setMajors(res.data);
       setLoading(false);
-    } catch (err) { console.error(err); setLoading(false); }
+    } catch (err) { 
+      console.error("Gagal load jurusan:", err); 
+      setLoading(false); 
+    }
   };
 
   const handleSubmit = async (e: any) => {

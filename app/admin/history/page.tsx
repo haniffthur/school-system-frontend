@@ -17,7 +17,16 @@ export default function HistoryPage() {
 
   const fetchHistory = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/attendance/history");
+
+      const token = localStorage.getItem("token");
+      if (!token) return; // Kalau gak ada token, batalin request
+
+      // 2. Siapkan config header tokennya
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
+      // 3. Sisipkan config ke request axios
+      const res = await axios.get("http://localhost:3000/attendance/history", config);
       setLogs(res.data);
       setLoading(false);
     } catch (e) { console.error(e); }

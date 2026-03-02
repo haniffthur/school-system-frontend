@@ -19,7 +19,9 @@ export default function LoginPage() {
 
     try {
       // 1. Tembak API Login Backend
-      const res = await axios.post("http://localhost:3000/auth/login", form);
+      const BACKEND_URL = "http://localhost:3000"; 
+      
+      const res = await axios.post(`${BACKEND_URL}/auth/login`, form);
       
       const { access_token, user } = res.data;
 

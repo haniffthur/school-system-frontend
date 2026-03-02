@@ -18,14 +18,28 @@ export default function StudentsPage() {
 
   const fetchData = async () => {
     try {
+      // 1. Ambil token dari localStorage
+      const token = localStorage.getItem("token");
+      if (!token) return; // Kalau tidak ada token, batalkan request
+
+      // 2. Buat config headers
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
+
+      // 3. Sisipkan config ke dalam axios
       const [resS, resC] = await Promise.all([
-         axios.get("http://localhost:3000/students"),
-         axios.get("http://localhost:3000/classes")
+         axios.get("http://localhost:3000/students", config),
+         axios.get("http://localhost:3000/classes", config)
       ]);
+      
       setStudents(resS.data);
       setClassList(resC.data);
       setLoading(false);
-    } catch (error) { console.error(error); setLoading(false); }
+    } catch (error) { 
+      console.error("Gagal ambil data:", error); 
+      setLoading(false); 
+    }
   };
 
   const handleCopy = (id: string) => {
@@ -34,16 +48,25 @@ export default function StudentsPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleSubmit = async (e: any) => {
+ const handleSubmit = async (e: any) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await axios.post("http://localhost:3000/students", formData);
+      const token = localStorage.getItem("token");
+      
+      // 4. Sisipkan token saat POST data siswa baru
+      await axios.post("http://localhost:3000/students", formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
       alert("Berhasil!");
       setIsModalOpen(false);
       setFormData({ name: "", email: "", password: "", classId: "" });
-      fetchData();
-    } catch (e) { alert("Gagal. Cek email."); }
+      fetchData(); // Refresh data setelah berhasil
+    } catch (e) { 
+      console.error("Gagal simpan:", e);
+      alert("Gagal. Cek koneksi atau pastikan email belum terdaftar."); 
+    }
     setIsSubmitting(false);
   };
 

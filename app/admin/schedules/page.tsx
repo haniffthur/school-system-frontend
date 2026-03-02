@@ -28,34 +28,58 @@ export default function SchedulesPage() {
 
   const fetchAllData = async () => {
     try {
+      // ✅ 1. Ambil token dan siapkan config
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
+      // ✅ 2. Selipkan config ke SEMUA request
       const [resSched, resClass, resTeach, resSub] = await Promise.all([
-        axios.get("http://localhost:3000/schedules"),
-        axios.get("http://localhost:3000/classes"),
-        axios.get("http://localhost:3000/teachers"),
-        axios.get("http://localhost:3000/subjects"),
+        axios.get("http://localhost:3000/schedules", config),
+        axios.get("http://localhost:3000/classes", config),
+        axios.get("http://localhost:3000/teachers", config),
+        axios.get("http://localhost:3000/subjects", config),
       ]);
+      
       setSchedules(resSched.data);
       setClasses(resClass.data);
       setTeachers(resTeach.data);
       setSubjects(resSub.data);
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      console.error(err); 
+    }
   };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:3000/schedules", form);
+      // ✅ Selipkan token saat POST
+      const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
+      await axios.post("http://localhost:3000/schedules", form, config);
+      
       fetchAllData();
       setIsModalOpen(false);
       setForm({ dayOfWeek: "1", startTime: "", endTime: "", classId: "", subjectId: "", teacherId: "" });
       alert("Jadwal berhasil dibuat! 📅");
-    } catch (err) { alert("Gagal membuat jadwal."); }
+    } catch (err) { 
+      alert("Gagal membuat jadwal."); 
+    }
   };
 
   const handleDelete = async (id: string) => {
     if(!confirm("Hapus jadwal ini?")) return;
-    await axios.delete(`http://localhost:3000/schedules/${id}`);
-    fetchAllData();
+    try {
+      // ✅ Selipkan token saat DELETE
+      const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
+      await axios.delete(`http://localhost:3000/schedules/${id}`, config);
+      fetchAllData();
+    } catch (err) {
+      console.error("Gagal hapus jadwal:", err);
+    }
   };
 
   const filtered = schedules.filter(s => 

@@ -19,28 +19,47 @@ export default function TeachersPage() {
 
   const fetchTeachers = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/teachers");
+      const token = localStorage.getItem("token");
+      if (!token) return; // Kalau gak ada token, batalin request
+
+      // 2. Siapkan config header tokennya
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
+      const res = await axios.get("http://localhost:3000/teachers", config);
       setTeachers(res.data);
       setLoading(false);
     } catch (err) { console.error(err); setLoading(false); }
   };
 
-  const handleSubmit = async (e: any) => {
+ const handleSubmit = async (e: any) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await axios.post("http://localhost:3000/teachers", form);
+      // ✅ Bawa token pas nyimpan
+      const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
+      await axios.post("http://localhost:3000/teachers", form, config);
+      
       alert("Guru berhasil ditambahkan! 👨‍🏫");
       setIsModalOpen(false);
       setForm({ name: "", nip: "", email: "", password: "" });
       fetchTeachers();
-    } catch (err) { alert("Gagal. Email atau NIP mungkin duplikat."); }
+    } catch (err) { 
+      alert("Gagal. Email atau NIP mungkin duplikat."); 
+    }
     setIsSubmitting(false);
   };
 
   const handleDelete = async (id: string) => {
     if(!confirm("Hapus data guru ini?")) return;
-    await axios.delete(`http://localhost:3000/teachers/${id}`);
+    
+    // ✅ Bawa token pas ngehapus
+    const token = localStorage.getItem("token");
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+    
+    await axios.delete(`http://localhost:3000/teachers/${id}`, config);
     fetchTeachers();
   };
 
